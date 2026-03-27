@@ -114,7 +114,45 @@ def delete(user_id):
 
 #   Exercise2
 # - POST /predict_house_price
+@app.route('/predict_house_price', methods=['POST'])
+def predict_house_price():
+    try:
+        data = request.get_json()
 
+        pets = bool(data.get('pets'))
+        cats = pets
+        dogs = pets
+
+        model = joblib.load(MODEL_PATH)
+
+        sample_data = [
+            data['city'],
+            data['province'],
+            float(data['latitude']),
+            float(data['longitude']),
+            data['lease_term'],
+            data['type'],
+            float(data['beds']),
+            float(data['baths']),
+            float(data['sq_feet']),
+            data['furnishing'],
+            data['smoking'],
+            cats,
+            dogs,
+        ]
+
+        sample_df = pd.DataFrame([sample_data], columns=PREDICTION_COLUMNS)
+
+        predicted_price = model.predict(sample_df)[0]
+
+        return jsonify({"predicted_price": predicted_price}), 200
+    
+    except KeyError as e:
+        return jsonify({"message": f"Missing required field: {str(e)}"}), 400
+    except ValueError as e:
+        return jsonify({"message": f"Invalid value: {str(e)}"}), 400
+    except Exception as e:
+        return jsonify({"message": f"An error occurred: {str(e)}"}), 400
 
 if __name__ == "__main__":
     app.run(debug=True, port=5050)
